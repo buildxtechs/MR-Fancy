@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import AppShell from "@/components/layout/AppShell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button, cn } from "@/components/ui/Button";
-import { Truck, Search, Plus, Phone, MapPin, CreditCard, Package, X } from "lucide-react";
+import { Truck, Search, Plus, Phone, MapPin, CreditCard, Package, X, Edit3, Trash2 } from "lucide-react";
 import { vendorsDB, seedDatabase } from "@/lib/localdb";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<any>(null);
   const [formData, setFormData] = useState({ name: '', phone: '', address: '', productsSupplied: '', creditBalance: 0 });
 
   useEffect(() => {
@@ -24,13 +25,44 @@ export default function VendorsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    vendorsDB.create({
+    const data = {
       ...formData,
       productsSupplied: formData.productsSupplied.split(',').map(s => s.trim()).filter(Boolean),
-    });
+    };
+    if (editingVendor) {
+      vendorsDB.update(editingVendor._id, data);
+    } else {
+      vendorsDB.create(data);
+    }
     setIsModalOpen(false);
+    setEditingVendor(null);
     fetchVendors();
     setFormData({ name: '', phone: '', address: '', productsSupplied: '', creditBalance: 0 });
+  };
+
+  const handleEdit = (vendor: any) => {
+    setEditingVendor(vendor);
+    setFormData({
+      name: vendor.name,
+      phone: vendor.phone,
+      address: vendor.address || '',
+      productsSupplied: (vendor.productsSupplied || []).join(', '),
+      creditBalance: vendor.creditBalance || 0
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete vendor "${name}"? This cannot be undone.`)) {
+      vendorsDB.delete(id);
+      fetchVendors();
+    }
+  };
+
+  const openCreateModal = () => {
+    setEditingVendor(null);
+    setFormData({ name: '', phone: '', address: '', productsSupplied: '', creditBalance: 0 });
+    setIsModalOpen(true);
   };
 
   const totalCredit = vendors.reduce((s, v) => s + (v.creditBalance || 0), 0);
@@ -42,8 +74,8 @@ export default function VendorsPage() {
           <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
             <Card className="w-full max-w-md border-none shadow-2xl animate-fade-in">
               <CardHeader className="flex flex-row items-center justify-between p-6 bg-cream">
-                <CardTitle>Add New Vendor</CardTitle>
-                <X className="w-5 h-5 text-brown/40 cursor-pointer hover:text-navy" onClick={() => setIsModalOpen(false)} />
+                <CardTitle>{editingVendor ? 'Edit Vendor' : 'Add New Vendor'}</CardTitle>
+                <X className="w-5 h-5 text-brown/40 cursor-pointer hover:text-navy" onClick={() => { setIsModalOpen(false); setEditingVendor(null); }} />
               </CardHeader>
               <form onSubmit={handleSubmit}>
                 <CardContent className="p-8 space-y-5">
@@ -69,8 +101,8 @@ export default function VendorsPage() {
                   </div>
                 </CardContent>
                 <div className="p-6 bg-cream flex gap-3">
-                  <Button type="button" variant="ghost" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                  <Button type="submit" variant="accent" className="flex-1">Add Vendor</Button>
+                  <Button type="button" variant="ghost" className="flex-1" onClick={() => { setIsModalOpen(false); setEditingVendor(null); }}>Cancel</Button>
+                  <Button type="submit" variant="accent" className="flex-1">{editingVendor ? 'Save Changes' : 'Add Vendor'}</Button>
                 </div>
               </form>
             </Card>
@@ -82,7 +114,7 @@ export default function VendorsPage() {
             <h2 className="text-3xl font-bold text-navy">Vendor Management</h2>
             <p className="text-brown/60 font-medium">Track suppliers, product sourcing, and credit balances.</p>
           </div>
-          <Button className="gap-2 h-12 px-6 rounded-xl shadow-lg shadow-gold/20" variant="accent" onClick={() => setIsModalOpen(true)}>
+          <Button className="gap-2 h-12 px-6 rounded-xl shadow-lg shadow-gold/20" variant="accent" onClick={openCreateModal}>
             <Plus className="w-5 h-5" /> Add Vendor
           </Button>
         </div>
@@ -116,19 +148,19 @@ export default function VendorsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-cream/50 text-[11px] font-black text-brown/50 uppercase tracking-widest border-b border-border/30">
-                  <th className="px-6 py-4">Vendor</th><th className="px-6 py-4">Contact</th><th className="px-6 py-4">Products</th><th className="px-6 py-4">Credit</th>
+                  <th className="px-6 py-4">Vendor</th><th className="px-6 py-4">Contact</th><th className="px-6 py-4">Products</th><th className="px-6 py-4">Credit</th><th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
                 {vendors.length === 0 ? (
-                  <tr><td colSpan={4} className="py-20 text-center text-brown/30 italic">No vendors found</td></tr>
+                  <tr><td colSpan={5} className="py-20 text-center text-brown/30 italic">No vendors found</td></tr>
                 ) : vendors.map(v => (
-                  <tr key={v._id} className="hover:bg-cream/50 transition-colors">
+                  <tr key={v._id} className="hover:bg-cream/50 transition-colors group">
                     <td className="px-6 py-5">
                       <p className="font-bold text-navy">{v.name}</p>
                       {v.address && <p className="text-[10px] text-brown/40 flex items-center gap-1"><MapPin className="w-3 h-3" />{v.address}</p>}
                     </td>
-                    <td className="px-6 py-5 text-xs text-brown/50 flex items-center gap-1"><Phone className="w-3 h-3" />{v.phone}</td>
+                    <td className="px-6 py-5 text-xs text-brown/50"><div className="flex items-center gap-1"><Phone className="w-3 h-3" />{v.phone}</div></td>
                     <td className="px-6 py-5">
                       <div className="flex flex-wrap gap-1">
                         {(v.productsSupplied || []).map((p: string, i: number) => (
@@ -140,6 +172,16 @@ export default function VendorsPage() {
                       <span className={cn("font-black", v.creditBalance > 0 ? "text-crimson" : "text-success")}>
                         ₹{(v.creditBalance || 0).toLocaleString()}
                       </span>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-brown/40 hover:text-gold" onClick={() => handleEdit(v)}>
+                          <Edit3 className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-brown/40 hover:text-crimson" onClick={() => handleDelete(v._id, v.name)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

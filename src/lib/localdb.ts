@@ -132,7 +132,12 @@ export const vendorsDB = new LocalDB('vendors');
 
 // ─── Seed Function (call on app init) ──────────────────────────
 export function seedDatabase() {
-  productsDB.seed(DEFAULT_PRODUCTS);
-  customersDB.seed(DEFAULT_CUSTOMERS);
-  vendorsDB.seed(DEFAULT_VENDORS);
+  if (typeof window === 'undefined') return;
+  const seeded = localStorage.getItem('mrfancy_has_seeded');
+  if (!seeded) {
+    productsDB.seed(DEFAULT_PRODUCTS);
+    customersDB.seed(DEFAULT_CUSTOMERS);
+    vendorsDB.seed(DEFAULT_VENDORS);
+    localStorage.setItem('mrfancy_has_seeded', 'true');
+  }
 }
