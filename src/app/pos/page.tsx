@@ -57,7 +57,16 @@ export default function POSPage() {
       setProducts(allProducts);
     };
     const debounce = setTimeout(fetchProducts, searchQuery.length > 2 ? 300 : 0);
-    return () => clearTimeout(debounce);
+
+    const handleSync = () => {
+      fetchProducts();
+    };
+    window.addEventListener('mrfancy_db_synced', handleSync);
+
+    return () => {
+      clearTimeout(debounce);
+      window.removeEventListener('mrfancy_db_synced', handleSync);
+    };
   }, [searchQuery]);
 
   // Keyboard shortcut for focusing search (F1)

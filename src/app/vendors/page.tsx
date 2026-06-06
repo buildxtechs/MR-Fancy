@@ -17,6 +17,9 @@ export default function VendorsPage() {
   useEffect(() => {
     seedDatabase();
     fetchVendors();
+    const handleSync = () => fetchVendors();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, [search]);
 
   const fetchVendors = () => {

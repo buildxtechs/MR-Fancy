@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
-import { salesDB, productsDB, customersDB, seedDatabase } from '@/lib/localdb';
+import dbConnect from '@/lib/mongodb';
+import Sale from '@/models/Sale';
+import Product from '@/models/Product';
+import Customer from '@/models/Customer';
 
 export async function GET() {
   try {
-    seedDatabase();
+    await dbConnect();
 
     // Today's date range
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString();
 
-    const allSales = salesDB.getAll();
-    const allProducts = productsDB.getAll();
-    const allCustomers = customersDB.getAll();
+    const allSales = await Sale.find();
+    const allProducts = await Product.find();
+    const allCustomers = await Customer.find();
 
     // Today's sales
     const todaySales = allSales.filter((s: any) => new Date(s.createdAt) >= today);
@@ -28,13 +30,23 @@ export async function GET() {
     const customerCount = allCustomers.length;
 
     // Recent sales (last 10)
-    const recentSales = allSales
+    const sortedSales = allSales
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10)
-      .map((sale: any) => {
-        const customer = customersDB.getById(sale.customer);
-        return { ...sale, customer: customer || { name: 'Walk-in' } };
-      });
+      .slice(0, 10);
+
+    const recentSales = await Promise.all(sortedSales.map(async (sale: any) => {
+      let customerName = 'Walk-in';
+      if (sale.customer) {
+        const cust = await Customer.findById(sale.customer);
+        if (cust) {
+          customerName = cust.name;
+        }
+      }
+      return {
+        ...sale.toObject(),
+        customer: { name: customerName }
+      };
+    }));
 
     return NextResponse.json({
       success: true,

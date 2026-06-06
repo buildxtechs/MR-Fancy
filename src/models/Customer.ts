@@ -13,7 +13,7 @@ const CustomerSchema: Schema = new Schema({
   phone: { type: String, required: true, unique: true },
   loyaltyPoints: { type: Number, default: 0 },
   segment: { type: String, enum: ['Regular', 'VIP', 'High Spender'], default: 'Regular' },
-  purchaseHistory: [{ type: Schema.Types.ObjectId, ref: 'Sale' }]
+  purchaseHistory: [{ type: String, ref: 'Sale' }]
 }, { timestamps: true });
 
 export default mongoose.models.Customer || mongoose.model<ICustomer>('Customer', CustomerSchema);

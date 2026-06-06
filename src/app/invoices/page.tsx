@@ -15,6 +15,9 @@ export default function InvoicesPage() {
   useEffect(() => {
     seedDatabase();
     fetchSales();
+    const handleSync = () => fetchSales();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, [search]);
 
   const fetchSales = () => {

@@ -17,9 +17,7 @@ export default function Home() {
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    seedDatabase();
-
+  const loadData = () => {
     // Compute analytics from localStorage
     const allSales = salesDB.getAll();
     const allProducts = productsDB.getAll();
@@ -82,8 +80,23 @@ export default function Home() {
         return { ...sale, customer: customer || { name: 'Walk-in' } };
       });
     setRecentSales(recent);
+  };
 
-    setTimeout(() => setLoading(false), 800);
+  useEffect(() => {
+    seedDatabase();
+    loadData();
+
+    const handleSync = () => {
+      loadData();
+      setLoading(false);
+    };
+    window.addEventListener('mrfancy_db_synced', handleSync);
+
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('mrfancy_db_synced', handleSync);
+    };
   }, []);
 
   const kpiCards = [

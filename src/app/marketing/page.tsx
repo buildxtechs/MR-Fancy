@@ -12,9 +12,16 @@ export default function MarketingPage() {
   const [message, setMessage] = useState('');
   const [selectedSegment, setSelectedSegment] = useState('All');
 
+  const loadData = () => {
+    setCustomers(customersDB.getAll());
+  };
+
   useEffect(() => {
     seedDatabase();
-    setCustomers(customersDB.getAll());
+    loadData();
+    const handleSync = () => loadData();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, []);
 
   const filteredCustomers = selectedSegment === 'All'

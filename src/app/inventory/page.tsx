@@ -18,6 +18,9 @@ export default function InventoryPage() {
   useEffect(() => {
     seedDatabase();
     fetchProducts();
+    const handleSync = () => fetchProducts();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, [search]);
 
   const fetchProducts = () => {

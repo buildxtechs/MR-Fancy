@@ -17,6 +17,9 @@ export default function CustomersPage() {
   useEffect(() => {
     seedDatabase();
     fetchCustomers();
+    const handleSync = () => fetchCustomers();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, [search]);
 
   const fetchCustomers = () => {

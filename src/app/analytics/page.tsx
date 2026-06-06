@@ -12,11 +12,18 @@ export default function AnalyticsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
 
-  useEffect(() => {
-    seedDatabase();
+  const loadData = () => {
     setSales(salesDB.getAll());
     setProducts(productsDB.getAll());
     setCustomers(customersDB.getAll());
+  };
+
+  useEffect(() => {
+    seedDatabase();
+    loadData();
+    const handleSync = () => loadData();
+    window.addEventListener('mrfancy_db_synced', handleSync);
+    return () => window.removeEventListener('mrfancy_db_synced', handleSync);
   }, []);
 
   const totalRevenue = sales.reduce((s, sale) => s + (sale.totalAmount || 0), 0);
