@@ -12,7 +12,7 @@ export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => vo
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden text-navy/60 hover:bg-gold/5 flex-shrink-0"
+          className="text-navy/60 hover:bg-gold/5 flex-shrink-0"
           onClick={onToggleSidebar}
         >
           <Menu className="w-5 h-5" />

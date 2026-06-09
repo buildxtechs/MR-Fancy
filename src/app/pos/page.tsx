@@ -607,10 +607,10 @@ export default function POSPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] overflow-hidden">
         
         {/* Left Side: Product Selection */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        <div className="lg:col-span-8 flex flex-col gap-6 h-full overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brown/40 group-focus-within:text-gold transition-colors" />
@@ -660,7 +660,7 @@ export default function POSPage() {
         </div>
 
         {/* Right Side: Cart & Checkout */}
-        <div className="lg:col-span-4 flex flex-col h-full">
+        <div className="lg:col-span-4 flex flex-col h-full overflow-hidden">
           <Card className="flex-1 flex flex-col border-none shadow-xl bg-ivory overflow-hidden rounded-3xl">
             <div className="text-white p-6" style={{ background: 'linear-gradient(135deg, #0F2640 0%, #1E3A5F 100%)' }}>
               <div className="flex items-center justify-between">

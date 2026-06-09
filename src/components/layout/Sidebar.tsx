@@ -39,7 +39,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean; setIs
     <aside 
       className={cn(
         "w-64 h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        isOpen ? "translate-x-0" : "-translate-x-full"
       )}
       style={{ background: 'linear-gradient(180deg, #0F2640 0%, #1E3A5F 100%)' }}
     >
@@ -55,10 +55,10 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean; setIs
           </div>
         </div>
 
-        {/* Mobile close button */}
+        {/* Close button */}
         <button 
           onClick={() => setIsOpen?.(false)}
-          className="md:hidden p-1 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="p-1 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
