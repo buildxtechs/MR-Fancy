@@ -15,7 +15,8 @@ import {
   LogOut,
   ChevronRight,
   FileText,
-  Receipt
+  Receipt,
+  X
 } from 'lucide-react';
 import { cn } from '@/components/ui/Button';
 
@@ -31,22 +32,36 @@ const menuItems = [
   { name: 'Settings', icon: Settings, href: '/settings' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean; setIsOpen?: (open: boolean) => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300"
+    <aside 
+      className={cn(
+        "w-64 h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300",
+        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
       style={{ background: 'linear-gradient(180deg, #0F2640 0%, #1E3A5F 100%)' }}
     >
       {/* Logo Section */}
-      <div className="p-5 flex items-center gap-3 border-b border-white/10">
-        <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 shadow-lg flex-shrink-0 animate-pulse-glow">
-          <img src="/logo.png" alt="MR Fancy Store" className="w-full h-full object-contain p-0.5" />
+      <div className="p-5 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 shadow-lg flex-shrink-0 animate-pulse-glow">
+            <img src="/logo.png" alt="MR Fancy Store" className="w-full h-full object-contain p-0.5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-white">MR Fancy</h1>
+            <p className="text-[9px] text-gold-light font-bold uppercase tracking-[0.25em]">Retail SaaS</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-bold tracking-tight text-white">MR Fancy</h1>
-          <p className="text-[9px] text-gold-light font-bold uppercase tracking-[0.25em]">Retail SaaS</p>
-        </div>
+
+        {/* Mobile close button */}
+        <button 
+          onClick={() => setIsOpen?.(false)}
+          className="md:hidden p-1 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation Menu */}
@@ -57,6 +72,9 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => {
+                if (setIsOpen) setIsOpen(false);
+              }}
               className={cn(
                 "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
                 isActive 

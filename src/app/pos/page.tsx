@@ -679,83 +679,85 @@ export default function POSPage() {
               </div>
             </div>
 
-            <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <CardContent className="flex-1 flex flex-col p-4 space-y-3 overflow-hidden">
               <CustomerSelect 
                 selectedCustomer={selectedCustomer} 
                 onSelect={(c) => { setSelectedCustomer(c as any); setRedeemPoints(false); setPointsToRedeem(0); }} 
               />
               
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-brown/20 gap-4 py-12">
-                  <Package className="w-16 h-16 stroke-[1px]" />
-                  <p className="font-medium">Cart is empty</p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div key={item.id} className="rounded-xl bg-cream/50 border border-transparent hover:border-gold/20 transition-all overflow-hidden">
-                    {/* Main row */}
-                    <div className="flex items-center gap-2 p-3">
-                      <div className="flex-1 text-left min-w-0">
-                        <h5 className="text-sm font-bold text-navy line-clamp-1">{item.name}</h5>
-                        {editingItem !== item.id && (
-                          <p className="text-xs font-semibold text-brown/50">₹{item.price} each</p>
-                        )}
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-brown/20 gap-4 py-12">
+                    <Package className="w-16 h-16 stroke-[1px]" />
+                    <p className="font-medium">Cart is empty</p>
+                  </div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.id} className="rounded-xl bg-cream/50 border border-transparent hover:border-gold/20 transition-all overflow-hidden">
+                      {/* Main row */}
+                      <div className="flex items-center gap-2 p-3">
+                        <div className="flex-1 text-left min-w-0">
+                          <h5 className="text-sm font-bold text-navy line-clamp-1">{item.name}</h5>
+                          {editingItem !== item.id && (
+                            <p className="text-xs font-semibold text-brown/50">₹{item.price} each</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-ivory px-2 py-1 rounded-lg border border-border">
+                          <button onClick={() => updateQuantity(item.id, -1)} className="p-0.5 hover:text-gold transition-colors">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <input
+                            type="number"
+                            className="w-8 text-center text-sm font-black text-navy bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={item.quantity}
+                            onChange={(e) => setQuantity(item.id, parseInt(e.target.value) || 1)}
+                            min={1}
+                          />
+                          <button onClick={() => updateQuantity(item.id, 1)} className="p-0.5 hover:text-gold transition-colors">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-black text-navy min-w-[50px] text-right">₹{(item.price * item.quantity).toFixed(0)}</p>
+                        <div className="flex flex-col gap-0.5">
+                          <button onClick={() => setEditingItem(editingItem === item.id ? null : item.id)} className={cn("p-1 rounded transition-colors", editingItem === item.id ? "text-gold bg-gold/10" : "text-brown/30 hover:text-gold")}>
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => removeFromCart(item.id)} className="p-1 rounded text-brown/30 hover:text-crimson transition-colors">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-ivory px-2 py-1 rounded-lg border border-border">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="p-0.5 hover:text-gold transition-colors">
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <input
-                          type="number"
-                          className="w-8 text-center text-sm font-black text-navy bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          value={item.quantity}
-                          onChange={(e) => setQuantity(item.id, parseInt(e.target.value) || 1)}
-                          min={1}
-                        />
-                        <button onClick={() => updateQuantity(item.id, 1)} className="p-0.5 hover:text-gold transition-colors">
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <p className="text-sm font-black text-navy min-w-[50px] text-right">₹{(item.price * item.quantity).toFixed(0)}</p>
-                      <div className="flex flex-col gap-0.5">
-                        <button onClick={() => setEditingItem(editingItem === item.id ? null : item.id)} className={cn("p-1 rounded transition-colors", editingItem === item.id ? "text-gold bg-gold/10" : "text-brown/30 hover:text-gold")}>
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => removeFromCart(item.id)} className="p-1 rounded text-brown/30 hover:text-crimson transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                    {/* Expanded edit row */}
-                    {editingItem === item.id && (
-                      <div className="px-3 pb-3 space-y-2 border-t border-border/20 pt-2">
-                        <div className="flex items-center gap-2">
-                          <label className="text-[10px] font-bold text-brown/40 uppercase w-12">Price</label>
-                          <div className="flex items-center gap-1 bg-ivory border border-border rounded-lg px-2 py-1 flex-1">
-                            <span className="text-xs text-brown/40">₹</span>
+                      {/* Expanded edit row */}
+                      {editingItem === item.id && (
+                        <div className="px-3 pb-3 space-y-2 border-t border-border/20 pt-2">
+                          <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-bold text-brown/40 uppercase w-12">Price</label>
+                            <div className="flex items-center gap-1 bg-ivory border border-border rounded-lg px-2 py-1 flex-1">
+                              <span className="text-xs text-brown/40">₹</span>
+                              <input
+                                type="number"
+                                className="w-full text-sm font-bold text-navy bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                value={item.price}
+                                onChange={(e) => setPrice(item.id, Number(e.target.value))}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-bold text-brown/40 uppercase w-12">Note</label>
                             <input
-                              type="number"
-                              className="w-full text-sm font-bold text-navy bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              value={item.price}
-                              onChange={(e) => setPrice(item.id, Number(e.target.value))}
+                              type="text"
+                              placeholder="e.g. Gift wrap, special request..."
+                              className="w-full text-xs bg-ivory border border-border rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-gold/20 text-navy"
+                              value={item.note || ''}
+                              onChange={(e) => setNote(item.id, e.target.value)}
                             />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-[10px] font-bold text-brown/40 uppercase w-12">Note</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Gift wrap, special request..."
-                            className="w-full text-xs bg-ivory border border-border rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-gold/20 text-navy"
-                            value={item.note || ''}
-                            onChange={(e) => setNote(item.id, e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
 
             <CardFooter className="flex flex-col gap-5 p-6 bg-cream/80 border-t border-border/30">

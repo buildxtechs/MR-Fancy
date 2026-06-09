@@ -1,15 +1,23 @@
 "use client";
 
 import React from 'react';
-import { Bell, Search, User, Globe } from 'lucide-react';
+import { Bell, Search, User, Globe, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-export default function Header() {
+export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   return (
-    <header className="h-16 bg-ivory/90 backdrop-blur-md border-b border-border/40 sticky top-0 z-40 px-8 flex items-center justify-between shadow-sm">
+    <header className="h-16 bg-ivory/90 backdrop-blur-md border-b border-border/40 sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between shadow-sm">
       {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative group">
+      <div className="flex-1 max-w-xl flex items-center gap-3">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden text-navy/60 hover:bg-gold/5 flex-shrink-0"
+          onClick={onToggleSidebar}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        <div className="relative group flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brown/40 group-focus-within:text-gold transition-colors" />
           <input 
             type="text" 
