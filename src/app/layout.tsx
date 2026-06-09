@@ -16,6 +16,10 @@ const arima = Arima({
 export const metadata: Metadata = {
   title: "MR Fancy Store | SaaS Retail POS",
   description: "Premium SaaS-based Inventory + POS + CRM for retail stores in Tamil Nadu.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  }
 };
 
 export default function RootLayout({

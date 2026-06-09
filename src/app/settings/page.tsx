@@ -17,6 +17,7 @@ export default function SettingsPage() {
       printerWidth: '80mm',
       language: 'English',
       pointValue: 0.5,
+      gstEnabled: true,
     };
     const saved = localStorage.getItem('mrfancy_settings');
     const defaults = {
@@ -28,6 +29,7 @@ export default function SettingsPage() {
       printerWidth: '80mm',
       language: 'English',
       pointValue: 0.5,
+      gstEnabled: true,
     };
     return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
@@ -85,6 +87,19 @@ export default function SettingsPage() {
                 <input className="w-full bg-cream border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gold/20 text-navy" placeholder={f.placeholder} value={(storeInfo as any)[f.key]} onChange={(e) => setStoreInfo({ ...storeInfo, [f.key]: e.target.value })} />
               </div>
             ))}
+            <div className="col-span-2 space-y-1.5 flex items-center justify-between bg-cream border border-border rounded-xl px-4 py-3">
+              <label className="text-sm font-bold text-navy uppercase tracking-tight">Enable GST Tax (18%) on Bills by Default</label>
+              <button
+                type="button"
+                onClick={() => setStoreInfo({ ...storeInfo, gstEnabled: !storeInfo.gstEnabled })}
+                className={`w-10 h-5 rounded-full transition-all relative ${storeInfo.gstEnabled ? "bg-success" : "bg-brown/20"}`}
+              >
+                <div
+                  className="w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all shadow-sm"
+                  style={{ left: storeInfo.gstEnabled ? '22px' : '2px' }}
+                />
+              </button>
+            </div>
             <div className="col-span-2 space-y-1.5">
               <label className="text-sm font-bold text-navy uppercase tracking-tight">Address</label>
               <textarea className="w-full bg-cream border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gold/20 text-navy resize-none" rows={2} value={storeInfo.address} onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })} />

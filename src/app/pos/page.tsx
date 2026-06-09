@@ -28,10 +28,26 @@ interface Customer {
 }
 
 function getSettings() {
-  if (typeof window === 'undefined') return { pointValue: 0.5 };
+  if (typeof window === 'undefined') return {
+    name: 'MR Fancy Stores',
+    tagline: 'Gifts • Fancy • Grocery',
+    phone: '+91 98765 43210',
+    address: 'Chengam',
+    gst: '33AABCU9603R1ZM',
+    gstEnabled: true,
+    pointValue: 0.5,
+  };
   const raw = localStorage.getItem('mrfancy_settings');
   const settings = raw ? JSON.parse(raw) : {};
-  return { pointValue: settings.pointValue ?? 0.5, ...settings };
+  return {
+    name: settings.name || 'MR Fancy Stores',
+    tagline: settings.tagline || 'Gifts • Fancy • Grocery',
+    phone: settings.phone || '+91 98765 43210',
+    address: settings.address || 'Chengam',
+    gst: settings.gst || '33AABCU9603R1ZM',
+    gstEnabled: settings.gstEnabled ?? true,
+    pointValue: settings.pointValue ?? 0.5,
+  };
 }
 
 export default function POSPage() {
@@ -46,8 +62,15 @@ export default function POSPage() {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [redeemPoints, setRedeemPoints] = useState(false);
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [gstEnabled, setGstEnabled] = useState(true);
+  const [showPhonePrompt, setShowPhonePrompt] = useState(false);
+  const [whatsappPromptNum, setWhatsappPromptNum] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const settings = getSettings();
+
+  useEffect(() => {
+    setGstEnabled(getSettings().gstEnabled);
+  }, []);
 
   // Fetch products from localStorage
   useEffect(() => {
@@ -160,11 +183,17 @@ export default function POSPage() {
   const pointsDiscount = pointsToRedeem * settings.pointValue;
   const total = Math.max(0, subtotal - discount - pointsDiscount);
 
-  const handleCheckout = async () => {
+  const handlePayClick = () => {
     if (cart.length === 0) {
       alert("Cart is empty");
       return;
     }
+    setWhatsappPromptNum(selectedCustomer?.phone || '');
+    setShowPhonePrompt(true);
+  };
+
+  const handleCheckout = async (whatsappNumber?: string) => {
+    setShowPhonePrompt(false);
     setIsLoading(true);
 
     try {
@@ -191,6 +220,7 @@ export default function POSPage() {
         pointsDiscount,
         paymentMode,
         billNumber,
+        gstEnabled,
       });
 
       // Update inventory
@@ -222,6 +252,17 @@ export default function POSPage() {
       setRedeemPoints(false);
       setPointsToRedeem(0);
       setEditingItem(null);
+
+      // Automatically open WhatsApp if number is provided
+      if (whatsappNumber && whatsappNumber.trim()) {
+        setTimeout(() => {
+          const phone = whatsappNumber.trim();
+          const itemsStr = saleItems.map(i => `• ${i.name} x${i.quantity} = ₹${i.totalPrice}`).join('\n');
+          const pointsLine = pointsToRedeem > 0 ? `\n🎁 Points Redeemed: ${pointsToRedeem} (-₹${pointsDiscount.toFixed(2)})` : '';
+          const msg = encodeURIComponent(`🧾 *${settings.name.toUpperCase()}*\n━━━━━━━━━━━━━━━\n📋 Bill: ${billNumber}\n📅 ${new Date().toLocaleString('en-IN')}\n👤 ${selectedCustomer?.name || 'Walk-in'}\n━━━━━━━━━━━━━━━\n${itemsStr}\n━━━━━━━━━━━━━━━${pointsLine}\n💰 *Total: ₹${total.toFixed(2)}*\n💳 Paid via: ${paymentMode}\n\nThank you! 🙏`);
+          window.open(`https://wa.me/${phone.startsWith('+') ? phone : '91' + phone}?text=${msg}`, '_blank');
+        }, 500);
+      }
     } catch (error) {
       alert("Failed to process checkout");
     } finally {
@@ -232,9 +273,238 @@ export default function POSPage() {
   const handlePrintBill = (sale: any) => {
     const pw = window.open('', '_blank', 'width=300,height=600');
     if (!pw) return;
-    const rows = (sale.items || []).map((i: any) => `<tr><td style="font-size:11px">${i.name}</td><td style="text-align:center;font-size:11px">${i.quantity}</td><td style="text-align:right;font-size:11px">₹${i.totalPrice}</td></tr>`).join('');
-    const pointsRow = sale.pointsRedeemed > 0 ? `<tr><td colspan="2">Points Redeemed (${sale.pointsRedeemed})</td><td style="text-align:right">-₹${sale.pointsDiscount?.toFixed(2)}</td></tr>` : '';
-    pw.document.write(`<!DOCTYPE html><html><head><title>${sale.billNumber}</title><style>body{font-family:monospace;width:72mm;margin:0 auto;padding:8px;font-size:12px}.c{text-align:center}.b{font-weight:bold}.l{border-top:1px dashed #000;margin:6px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}</style></head><body><div class="c"><img src="/logo.png" width="60"><br><span class="b" style="font-size:14px">MR FANCY STORES</span><br><span style="font-size:10px">Gifts • Fancy • Grocery</span></div><div class="l"></div><div style="font-size:10px"><b>Bill:</b> ${sale.billNumber}<br><b>Date:</b> ${new Date(sale.createdAt).toLocaleString('en-IN')}<br><b>Customer:</b> ${sale.customer?.name || 'Walk-in'}<br><b>Payment:</b> ${sale.paymentMode}</div><div class="l"></div><table><tr class="b"><td>Item</td><td style="text-align:center">Qty</td><td style="text-align:right">Amt</td></tr>${rows}</table><div class="l"></div><table>${sale.discount > 0 ? `<tr><td>Discount</td><td style="text-align:right">-₹${sale.discount}</td></tr>` : ''}${pointsRow}<tr class="b" style="font-size:14px"><td>TOTAL</td><td style="text-align:right">₹${sale.totalAmount.toFixed(2)}</td></tr></table><div class="l"></div><div class="c" style="font-size:10px"><br>Thank you! 🙏</div></body></html>`);
+
+    const settings = getSettings();
+    const d = new Date(sale.createdAt);
+    const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const timeStr = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+
+    const totalQty = (sale.items || []).reduce((sum: number, item: any) => sum + item.quantity, 0);
+    const subtotal = (sale.items || []).reduce((sum: number, item: any) => sum + item.totalPrice, 0);
+    
+    // Calculate tax and subtotal before tax
+    const discountVal = sale.discount || 0;
+    const pointsDiscountVal = sale.pointsDiscount || 0;
+    const finalTotal = sale.totalAmount;
+    
+    // GST is calculated as inclusive of the final price if enabled
+    const isGst = sale.gstEnabled ?? true;
+    const taxableAmount = isGst ? (finalTotal / 1.18) : finalTotal;
+    const cgst = isGst ? (taxableAmount * 0.09) : 0;
+    const sgst = isGst ? (taxableAmount * 0.09) : 0;
+    const subTotalBeforeTax = finalTotal - cgst - sgst;
+
+    const rows = (sale.items || []).map((i: any) => `
+      <tr>
+        <td style="font-size:11px; text-align:left; word-break:break-word; max-width:110px;">${i.name}</td>
+        <td style="text-align:center;font-size:11px;">${i.quantity}</td>
+        <td style="text-align:right;font-size:11px;">${(i.unitPrice || (i.totalPrice / i.quantity)).toFixed(2)}</td>
+        <td style="text-align:right;font-size:11px;">${i.totalPrice.toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const pointsRow = sale.pointsRedeemed > 0 ? `
+      <tr>
+        <td colspan="3">Points Redeemed (${sale.pointsRedeemed})</td>
+        <td style="text-align:right;">-₹${pointsDiscountVal.toFixed(2)}</td>
+      </tr>
+    ` : '';
+
+    pw.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>${sale.billNumber}</title>
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 80mm;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+    }
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.3;
+      color: #000000;
+      padding: 4px 6px;
+      box-sizing: border-box;
+    }
+    .c { text-align: center; }
+    .b { font-weight: bold; }
+    .r { text-align: right; }
+    .store-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .store-tagline {
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+    .store-details {
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+    .line {
+      border-top: 1px dashed #000;
+      margin: 5px 0;
+    }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin: 4px 0;
+    }
+    .info-table td {
+      padding: 1px 0;
+      vertical-align: top;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin: 4px 0;
+    }
+    .items-table th, .items-table td {
+      padding: 3px 0;
+      vertical-align: top;
+    }
+    .items-table th {
+      font-weight: bold;
+      border-bottom: 1px dashed #000;
+    }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin: 4px 0;
+    }
+    .totals-table td {
+      padding: 2px 0;
+    }
+    .total-row {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .footer {
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .footer-thankyou {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    .footer-visit {
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+    .footer-store {
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="c">
+    <div class="store-name">${settings.name.toUpperCase()}</div>
+    <div class="store-tagline">${settings.tagline}</div>
+    <div class="store-details">
+      ${settings.address.toUpperCase()}<br>
+      Ph: ${settings.phone}<br>
+      GSTIN: ${settings.gst}
+    </div>
+  </div>
+
+  <div class="line"></div>
+
+  <table class="info-table">
+    <tr>
+      <td style="width: 55%;">Bill No : ${sale.billNumber}</td>
+      <td style="width: 45%; text-align: right;">Date : ${dateStr}</td>
+    </tr>
+    <tr>
+      <td>Customer: ${sale.customer?.name || 'Walk-in'}</td>
+      <td style="text-align: right;">Time : ${timeStr}</td>
+    </tr>
+    <tr>
+      <td>Cashier : Admin</td>
+      <td style="text-align: right;">Payment : ${sale.paymentMode}</td>
+    </tr>
+  </table>
+
+  <div class="line"></div>
+
+  <table class="items-table">
+    <thead>
+      <tr class="b">
+        <th style="text-align: left; width: 45%;">Item</th>
+        <th style="text-align: center; width: 15%;">Qty</th>
+        <th style="text-align: right; width: 20%;">Rate</th>
+        <th style="text-align: right; width: 20%;">Amt</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+
+  <div class="line"></div>
+
+  <table class="totals-table">
+    <tr>
+      <td style="width: 45%;">Sub Total</td>
+      <td style="text-align: center; width: 15%;">${totalQty}</td>
+      <td style="text-align: right; width: 40%;">₹${subTotalBeforeTax.toFixed(2)}</td>
+    </tr>
+    ${discountVal > 0 ? `<tr><td>Discount</td><td></td><td style="text-align: right;">-₹${discountVal.toFixed(2)}</td></tr>` : ''}
+    ${pointsRow}
+    ${isGst ? `
+    <tr>
+      <td>CGST @ 9%</td>
+      <td></td>
+      <td style="text-align: right;">₹${cgst.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td>SGST @ 9%</td>
+      <td></td>
+      <td style="text-align: right;">₹${sgst.toFixed(2)}</td>
+    </tr>
+    ` : ''}
+    <tr class="line"><td colspan="3"></td></tr>
+    <tr class="total-row">
+      <td style="font-size: 16px;">TOTAL</td>
+      <td></td>
+      <td style="text-align: right; font-size: 16px;">₹${finalTotal.toFixed(2)}</td>
+    </tr>
+  </table>
+
+  <div class="line"></div>
+
+  <table class="info-table" style="margin-top: 2px;">
+    <tr>
+      <td>Payment Mode : ${sale.paymentMode}</td>
+    </tr>
+  </table>
+
+  <div class="c footer">
+    <div class="footer-thankyou">Thank You For Shopping!</div>
+    <div class="footer-visit">Visit Again</div>
+    <div class="footer-store">${settings.name.toUpperCase()}</div>
+  </div>
+  <div class="line"></div>
+</body>
+</html>`);
     pw.document.close();
     setTimeout(() => pw.print(), 300);
   };
@@ -250,6 +520,43 @@ export default function POSPage() {
 
   return (
     <AppShell>
+      {/* WhatsApp Phone Prompt Modal */}
+      {showPhonePrompt && (
+        <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-ivory rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div className="p-6 text-center" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
+              <div className="w-14 h-14 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Smartphone className="w-8 h-8 text-gold-light" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Send Bill on WhatsApp?</h3>
+              <p className="text-gold-light/60 text-xs mt-1">Provide customer's mobile number to share the receipt.</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-navy uppercase tracking-tight">WhatsApp Number (Optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. 9876543210" 
+                  className="w-full bg-cream border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gold/20 text-navy font-bold text-lg" 
+                  value={whatsappPromptNum} 
+                  onChange={(e) => setWhatsappPromptNum(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCheckout(whatsappPromptNum);
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="p-6 bg-cream/50 border-t border-border/30 flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => handleCheckout()}>Pay Only (Skip)</Button>
+              <Button variant="accent" className="flex-1 font-bold" onClick={() => handleCheckout(whatsappPromptNum)}>Pay & Send</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Post-Checkout Bill Modal */}
       {completedSale && (
         <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -482,6 +789,25 @@ export default function POSPage() {
                   </div>
                 )}
 
+                {/* GST Tax toggle */}
+                <div className="bg-navy/5 border border-navy/10 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-navy">Enable GST (18%)</span>
+                  </div>
+                  <button
+                    onClick={() => setGstEnabled(!gstEnabled)}
+                    className={cn(
+                      "w-10 h-5 rounded-full transition-all relative",
+                      gstEnabled ? "bg-success" : "bg-brown/20"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all shadow-sm",
+                      gstEnabled ? "left-5.5" : "left-0.5"
+                    )} style={{ left: gstEnabled ? '22px' : '2px' }} />
+                  </button>
+                </div>
+
                 {/* Price summary */}
                 <div className="space-y-1.5 pt-1">
                   <div className="flex justify-between text-brown/50 font-semibold text-sm">
@@ -521,7 +847,7 @@ export default function POSPage() {
                 )} 
                 variant="accent"
                 disabled={cart.length === 0}
-                onClick={handleCheckout}
+                onClick={handlePayClick}
                 isLoading={isLoading}
               >
                 <Zap className="w-5 h-5 fill-white" />
