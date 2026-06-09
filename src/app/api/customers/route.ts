@@ -57,6 +57,13 @@ export async function DELETE(req: Request) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const all = searchParams.get('all');
+    
+    if (all === 'true') {
+      await Customer.deleteMany({});
+      return NextResponse.json({ success: true, message: 'All customers deleted' });
+    }
+    
     if (!id) throw new Error('ID is required');
     await Customer.findByIdAndDelete(id);
     return NextResponse.json({ success: true });

@@ -34,6 +34,116 @@ export default function InvoicesPage() {
   const [sales, setSales] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedBill, setSelectedBill] = useState<any>(null);
+  const [showClearModal, setShowClearModal] = useState(false);
+
+  const handleClearImmediately = async () => {
+    setShowClearModal(false);
+    localStorage.removeItem('mrfancy_sales');
+    try {
+      await fetch('/api/sales?all=true', { method: 'DELETE' });
+    } catch (e) {
+      console.error('Failed to clear sales in cloud:', e);
+    }
+    fetchSales();
+    window.dispatchEvent(new Event('mrfancy_db_synced'));
+    alert('All sales records have been cleared.');
+  };
+
+  const handlePrintSummaryAndClear = async () => {
+    const pw = window.open('', '_blank', 'width=300,height=600');
+    if (!pw) return;
+
+    const settings = getSettings();
+    const d = new Date();
+    const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const totalAmt = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    const rows = sales.map(s => `
+      <tr>
+        <td style="font-size:11px; text-align:left;">${s.billNumber}</td>
+        <td style="font-size:11px; text-align:right;">₹${s.totalAmount.toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    pw.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Sales Summary Report</title>
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 80mm;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+    }
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.3;
+      color: #000000;
+      padding: 4px 6px;
+      box-sizing: border-box;
+    }
+    .c { text-align: center; }
+    .b { font-weight: bold; }
+    .line {
+      border-top: 1px dashed #000;
+      margin: 5px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td, th {
+      padding: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="c b" style="font-size:14px;">SALES RESET SUMMARY</div>
+  <div class="c">${settings.name.toUpperCase()}</div>
+  <div class="line"></div>
+  <div style="font-size: 10px;">
+    Reset Date: ${dateStr} ${timeStr}<br>
+    Total Invoices: ${sales.length}
+  </div>
+  <div class="line"></div>
+  <table>
+    <thead>
+      <tr class="b">
+        <th style="text-align:left; font-size:11px;">Bill Number</th>
+        <th style="text-align:right; font-size:11px;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+  <div class="line"></div>
+  <table>
+    <tr class="b">
+      <td style="font-size:13px;">GRAND TOTAL</td>
+      <td style="text-align:right; font-size:13px;">₹${totalAmt.toFixed(2)}</td>
+    </tr>
+  </table>
+  <div class="line"></div>
+  <div class="c" style="font-size:10px;">End of Report</div>
+  <div class="line"></div>
+</body>
+</html>`);
+
+    pw.document.close();
+    setTimeout(() => {
+      pw.print();
+      handleClearImmediately();
+    }, 500);
+  };
 
   useEffect(() => {
     seedDatabase();
@@ -306,14 +416,49 @@ export default function InvoicesPage() {
 
   return (
     <AppShell>
+      {/* Clear Invoices Confirmation Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-ivory rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div className="p-6 text-center" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
+              <h3 className="text-xl font-bold text-white">Reset Invoice Records?</h3>
+              <p className="text-gold-light text-xs mt-1">This will permanently delete all sales and invoice records.</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-brown/70 leading-relaxed text-center">
+                Before clearing, you can print a summary of all current invoices (showing Bill Numbers and totals) for your store records.
+              </p>
+            </div>
+            <div className="p-6 bg-cream/50 border-t border-border/30 space-y-3">
+              <div className="flex gap-3">
+                <Button variant="accent" className="flex-1 font-bold h-12" onClick={handlePrintSummaryAndClear}>Print & Clear</Button>
+                <Button variant="outline" className="flex-1 text-crimson border-crimson/20 hover:bg-crimson/5 font-bold h-12" onClick={handleClearImmediately}>Clear (Skip)</Button>
+              </div>
+              <Button variant="ghost" className="w-full text-brown/50" onClick={() => setShowClearModal(false)}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-navy">Invoices & Bills</h2>
             <p className="text-brown/60 font-medium">View, print, and share all your transaction records.</p>
           </div>
-          <div className="flex items-center gap-2 text-sm font-bold text-brown/40">
-            <Receipt className="w-4 h-4" /> {sales.length} Total Bills
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-brown/40">
+              <Receipt className="w-4 h-4" /> {sales.length} Total Bills
+            </div>
+            {sales.length > 0 && (
+              <Button 
+                variant="outline" 
+                className="text-crimson border-crimson/20 hover:bg-crimson/5 h-10 rounded-xl font-bold text-xs"
+                onClick={() => setShowClearModal(true)}
+              >
+                Clear Invoices
+              </Button>
+            )}
           </div>
         </div>
 

@@ -94,6 +94,13 @@ export async function DELETE(req: Request) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const all = searchParams.get('all');
+    
+    if (all === 'true') {
+      await Sale.deleteMany({});
+      return NextResponse.json({ success: true, message: 'All sales deleted' });
+    }
+    
     if (!id) throw new Error('ID is required');
     await Sale.findByIdAndDelete(id);
     return NextResponse.json({ success: true });

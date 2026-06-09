@@ -39,10 +39,22 @@ export default function SettingsPage() {
     alert('✅ Settings saved successfully!');
   };
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     if (confirm('⚠️ This will delete customers, sales, and vendors. Product inventory will be preserved. Are you sure?')) {
       ['mrfancy_customers', 'mrfancy_sales', 'mrfancy_vendors'].forEach(k => localStorage.removeItem(k));
-      alert('Data cleared successfully.');
+      
+      try {
+        await Promise.all([
+          fetch('/api/sales?all=true', { method: 'DELETE' }),
+          fetch('/api/customers?all=true', { method: 'DELETE' }),
+          fetch('/api/vendors?all=true', { method: 'DELETE' })
+        ]);
+        alert('Data cleared successfully.');
+      } catch (e) {
+        console.error('Failed to clear cloud database:', e);
+        alert('Data cleared from local store, but failed to sync to cloud.');
+      }
+      
       window.location.reload();
     }
   };
