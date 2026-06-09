@@ -96,6 +96,14 @@ export default function CustomerSelect({ onSelect, selectedCustomer }: CustomerS
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+                <button
+                  type="button"
+                  title="Add Customer"
+                  className="p-1.5 bg-gold/10 hover:bg-gold/20 text-gold rounded-md flex items-center justify-center transition-colors"
+                  onClick={() => setIsRegistering(true)}
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
                 <X className="w-4 h-4 text-brown/30 cursor-pointer hover:text-navy" onClick={() => setIsOpen(false)} />
               </div>
 
