@@ -34,7 +34,7 @@ function getSettings() {
     phone: '+91 98765 43210',
     address: 'Chengam',
     gst: '33AABCU9603R1ZM',
-    gstEnabled: true,
+    gstEnabled: false,
     pointValue: 0.5,
   };
   const raw = localStorage.getItem('mrfancy_settings');
@@ -45,7 +45,7 @@ function getSettings() {
     phone: settings.phone || '+91 98765 43210',
     address: settings.address || 'Chengam',
     gst: settings.gst || '33AABCU9603R1ZM',
-    gstEnabled: settings.gstEnabled ?? true,
+    gstEnabled: settings.gstEnabled ?? false,
     pointValue: settings.pointValue ?? 0.5,
   };
 }

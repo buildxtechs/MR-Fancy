@@ -17,7 +17,7 @@ export default function SettingsPage() {
       printerWidth: '80mm',
       language: 'English',
       pointValue: 0.5,
-      gstEnabled: true,
+      gstEnabled: false,
     };
     const saved = localStorage.getItem('mrfancy_settings');
     const defaults = {
@@ -29,7 +29,7 @@ export default function SettingsPage() {
       printerWidth: '80mm',
       language: 'English',
       pointValue: 0.5,
-      gstEnabled: true,
+      gstEnabled: false,
     };
     return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
