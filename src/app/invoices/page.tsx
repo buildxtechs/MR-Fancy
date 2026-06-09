@@ -69,6 +69,7 @@ export default function InvoicesPage() {
     pw.document.write(`<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Sales Summary Report</title>
   <style>
     @page {
@@ -190,10 +191,11 @@ export default function InvoicesPage() {
     
     // GST is calculated as inclusive of the final price if enabled
     const isGst = sale.gstEnabled ?? true;
-    const taxableAmount = isGst ? (finalTotal / 1.18) : finalTotal;
+    const subTotalAfterDiscount = subtotal - discountVal - pointsDiscountVal;
+    const taxableAmount = isGst ? (subTotalAfterDiscount / 1.18) : subTotalAfterDiscount;
     const cgst = isGst ? (taxableAmount * 0.09) : 0;
     const sgst = isGst ? (taxableAmount * 0.09) : 0;
-    const subTotalBeforeTax = finalTotal - cgst - sgst;
+    const subTotalBeforeTax = subTotalAfterDiscount - cgst - sgst;
 
     const rows = (sale.items || []).map((i: any) => `
       <tr>
@@ -214,6 +216,7 @@ export default function InvoicesPage() {
     pw.document.write(`<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>${sale.billNumber}</title>
   <style>
     @page {
@@ -317,8 +320,8 @@ export default function InvoicesPage() {
     <div class="store-tagline">${settings.tagline}</div>
     <div class="store-details">
       ${settings.address.toUpperCase()}<br>
-      Ph: ${settings.phone}<br>
-      GSTIN: ${settings.gst}
+      Ph: ${settings.phone}
+      ${isGst ? `<br>GSTIN: ${settings.gst}` : ''}
     </div>
   </div>
 
@@ -361,10 +364,17 @@ export default function InvoicesPage() {
     <tr>
       <td style="width: 45%;">Sub Total</td>
       <td style="text-align: center; width: 15%;">${totalQty}</td>
-      <td style="text-align: right; width: 40%;">₹${subTotalBeforeTax.toFixed(2)}</td>
+      <td style="text-align: right; width: 40%;">₹${subtotal.toFixed(2)}</td>
     </tr>
     ${discountVal > 0 ? `<tr><td>Discount</td><td></td><td style="text-align: right;">-₹${discountVal.toFixed(2)}</td></tr>` : ''}
     ${pointsRow}
+    ${(discountVal > 0 || pointsDiscountVal > 0) ? `
+    <tr>
+      <td>Sub Total (After Disc)</td>
+      <td></td>
+      <td style="text-align: right;">₹${subTotalAfterDiscount.toFixed(2)}</td>
+    </tr>
+    ` : ''}
     ${isGst ? `
     <tr>
       <td>CGST @ 9%</td>
