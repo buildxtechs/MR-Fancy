@@ -245,13 +245,19 @@ export default function POSPage() {
         }
       }
 
-      setCompletedSale({ ...sale, billNumber, customer: selectedCustomer, items: saleItems, pointsRedeemed: pointsToRedeem, pointsDiscount });
+      const fullSale = { ...sale, billNumber, customer: selectedCustomer, items: saleItems, pointsRedeemed: pointsToRedeem, pointsDiscount };
+      setCompletedSale(fullSale);
       setCart([]);
       setSelectedCustomer(null);
       setDiscount(0);
       setRedeemPoints(false);
       setPointsToRedeem(0);
       setEditingItem(null);
+
+      // Automatically print the bill after 2-3 seconds
+      setTimeout(() => {
+        handlePrintBill(fullSale);
+      }, 2000);
 
       // Automatically open WhatsApp if number is provided
       if (whatsappNumber && whatsappNumber.trim()) {
