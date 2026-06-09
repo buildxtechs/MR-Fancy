@@ -531,8 +531,8 @@ export default function POSPage() {
         <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-ivory rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             <div className="p-6 text-center" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
-              <div className="w-14 h-14 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Smartphone className="w-8 h-8 text-gold-light" />
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <img src="/logo.png" className="w-10 h-10 object-contain" alt="Store Logo" />
               </div>
               <h3 className="text-xl font-bold text-white">Send Bill on WhatsApp?</h3>
               <p className="text-gold-light/60 text-xs mt-1">Provide customer's mobile number to share the receipt.</p>
@@ -568,8 +568,8 @@ export default function POSPage() {
         <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-ivory rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             <div className="p-6 text-center" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
-              <div className="w-14 h-14 bg-success rounded-full flex items-center justify-center mx-auto mb-3">
-                <Check className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <img src="/logo.png" className="w-10 h-10 object-contain" alt="Store Logo" />
               </div>
               <h3 className="text-xl font-bold text-white">Payment Successful!</h3>
               <p className="text-gold-light text-sm font-bold mt-1">{completedSale.billNumber}</p>

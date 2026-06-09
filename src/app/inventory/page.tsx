@@ -49,11 +49,20 @@ export default function InventoryPage() {
         {/* Product Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <Card className="w-full max-w-2xl border-none shadow-2xl animate-fade-in">
-              <CardHeader className="flex flex-row items-center justify-between p-6 bg-cream">
-                <CardTitle>Add New Product</CardTitle>
-                <X className="w-5 h-5 text-brown/40 cursor-pointer hover:text-navy" onClick={() => setIsModalOpen(false)} />
-              </CardHeader>
+            <Card className="w-full max-w-2xl border-none shadow-2xl animate-fade-in overflow-hidden">
+              <div className="p-6 text-center relative" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+                  <img src="/logo.png" className="w-10 h-10 object-contain" alt="Store Logo" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Add New Product</h3>
+                <button
+                  type="button"
+                  className="absolute right-4 top-4 text-white/60 hover:text-white transition-colors"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
               <form onSubmit={handleSubmit}>
                 <CardContent className="p-8 grid grid-cols-2 gap-6">
                   <div className="col-span-2 space-y-1.5">

@@ -421,6 +421,9 @@ export default function InvoicesPage() {
         <div className="fixed inset-0 bg-navy/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-ivory rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             <div className="p-6 text-center" style={{ background: 'linear-gradient(135deg, #0F2640, #1E3A5F)' }}>
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <img src="/logo.png" className="w-10 h-10 object-contain" alt="Store Logo" />
+              </div>
               <h3 className="text-xl font-bold text-white">Reset Invoice Records?</h3>
               <p className="text-gold-light text-xs mt-1">This will permanently delete all sales and invoice records.</p>
             </div>
