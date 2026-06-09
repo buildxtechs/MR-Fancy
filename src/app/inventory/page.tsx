@@ -11,6 +11,7 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '', category: 'Fancy', costPrice: 0, sellingPrice: 0, stockQuantity: 0, sku: '', barcode: '', lowStockThreshold: 10, unit: 'pcs'
   });
@@ -28,10 +29,31 @@ export default function InventoryPage() {
     setProducts(items);
   };
 
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      category: product.category || 'Fancy',
+      costPrice: product.costPrice,
+      sellingPrice: product.sellingPrice,
+      stockQuantity: product.stockQuantity,
+      sku: product.sku,
+      barcode: product.barcode || '',
+      lowStockThreshold: product.lowStockThreshold || 10,
+      unit: product.unit || 'pcs'
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    productsDB.create(formData);
+    if (editingProduct) {
+      productsDB.update(editingProduct._id, formData);
+    } else {
+      productsDB.create(formData);
+    }
     setIsModalOpen(false);
+    setEditingProduct(null);
     fetchProducts();
     setFormData({ name: '', category: 'Fancy', costPrice: 0, sellingPrice: 0, stockQuantity: 0, sku: '', barcode: '', lowStockThreshold: 10, unit: 'pcs' });
   };
@@ -54,11 +76,11 @@ export default function InventoryPage() {
                 <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <img src="/logo.png" className="w-10 h-10 object-contain" alt="Store Logo" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Add New Product</h3>
+                <h3 className="text-xl font-bold text-white">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
                 <button
                   type="button"
                   className="absolute right-4 top-4 text-white/60 hover:text-white transition-colors"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => { setIsModalOpen(false); setEditingProduct(null); }}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -101,8 +123,8 @@ export default function InventoryPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="p-6 bg-cream flex gap-3">
-                  <Button type="button" variant="ghost" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                  <Button type="submit" variant="accent" className="flex-1">Create Product</Button>
+                  <Button type="button" variant="ghost" className="flex-1" onClick={() => { setIsModalOpen(false); setEditingProduct(null); }}>Cancel</Button>
+                  <Button type="submit" variant="accent" className="flex-1">{editingProduct ? 'Save Changes' : 'Create Product'}</Button>
                 </CardFooter>
               </form>
             </Card>
@@ -114,7 +136,11 @@ export default function InventoryPage() {
             <h2 className="text-3xl font-bold text-navy">Inventory Management</h2>
             <p className="text-brown/60 font-medium">Manage your products, stock levels, and pricing.</p>
           </div>
-          <Button className="gap-2 h-12 px-6 rounded-xl shadow-lg shadow-gold/20" variant="accent" onClick={() => setIsModalOpen(true)}>
+          <Button className="gap-2 h-12 px-6 rounded-xl shadow-lg shadow-gold/20" variant="accent" onClick={() => {
+            setEditingProduct(null);
+            setFormData({ name: '', category: 'Fancy', costPrice: 0, sellingPrice: 0, stockQuantity: 0, sku: '', barcode: '', lowStockThreshold: 10, unit: 'pcs' });
+            setIsModalOpen(true);
+          }}>
             <Plus className="w-5 h-5" />
             Add New Product
           </Button>
@@ -197,7 +223,7 @@ export default function InventoryPage() {
                         </td>
                         <td className="px-6 py-5 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-brown/40 hover:text-gold">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-brown/40 hover:text-gold" onClick={() => handleEdit(p)}>
                               <Edit3 className="w-4 h-4" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-brown/40 hover:text-crimson" onClick={() => handleDelete(p._id)}>

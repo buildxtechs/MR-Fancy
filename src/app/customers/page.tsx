@@ -29,6 +29,12 @@ export default function CustomersPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCustomer) {
+      // Check for duplicate phone among other customers
+      const existing = customersDB.getAll();
+      if (existing.some((c: any) => c.phone === formData.phone && c._id !== editingCustomer._id)) {
+        alert('Customer with this phone already exists');
+        return;
+      }
       // Update existing customer
       customersDB.update(editingCustomer._id, {
         name: formData.name,
