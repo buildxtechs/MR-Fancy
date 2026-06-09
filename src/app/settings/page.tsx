@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import AppShell from "@/components/layout/AppShell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Settings, Store, Printer, Database, Globe, Shield, Bell, Save, Trash2, RotateCcw, Gift } from "lucide-react";
+import { Settings, Store, Database, Globe, Shield, Bell, Save, Trash2, RotateCcw, Gift } from "lucide-react";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 export default function SettingsPage() {
+  const { showAlert, showConfirm } = useDialog();
   const [storeInfo, setStoreInfo] = useState(() => {
     if (typeof window === 'undefined') return {
       name: 'MR Fancy Stores',
@@ -34,13 +36,22 @@ export default function SettingsPage() {
     return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     localStorage.setItem('mrfancy_settings', JSON.stringify(storeInfo));
-    alert('✅ Settings saved successfully!');
+    await showAlert({
+      title: 'Settings Saved',
+      message: 'Settings saved successfully!',
+      type: 'success'
+    });
   };
 
   const handleClearData = async () => {
-    if (confirm('⚠️ This will delete customers, sales, and vendors. Product inventory will be preserved. Are you sure?')) {
+    const confirmed = await showConfirm({
+      title: 'Clear Data?',
+      message: '⚠️ This will delete customers, sales, and vendors. Product inventory will be preserved. Are you sure?',
+      type: 'warning'
+    });
+    if (confirmed) {
       ['mrfancy_customers', 'mrfancy_sales', 'mrfancy_vendors'].forEach(k => localStorage.removeItem(k));
       
       try {
@@ -49,10 +60,18 @@ export default function SettingsPage() {
           fetch('/api/customers?all=true', { method: 'DELETE' }),
           fetch('/api/vendors?all=true', { method: 'DELETE' })
         ]);
-        alert('Data cleared successfully.');
+        await showAlert({
+          title: 'Success',
+          message: 'Data cleared successfully.',
+          type: 'success'
+        });
       } catch (e) {
         console.error('Failed to clear cloud database:', e);
-        alert('Data cleared from local store, but failed to sync to cloud.');
+        await showAlert({
+          title: 'Database Sync Error',
+          message: 'Data cleared from local store, but failed to sync to cloud.',
+          type: 'error'
+        });
       }
       
       window.location.reload();
@@ -116,25 +135,6 @@ export default function SettingsPage() {
               <label className="text-sm font-bold text-navy uppercase tracking-tight">Address</label>
               <textarea className="w-full bg-cream border border-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gold/20 text-navy resize-none" rows={2} value={storeInfo.address} onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })} />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Printer Settings */}
-        <Card className="border-none shadow-sm bg-ivory">
-          <CardHeader className="flex flex-row items-center gap-3">
-            <div className="p-2 bg-navy/10 rounded-lg"><Printer className="w-5 h-5 text-navy" /></div>
-            <CardTitle>Thermal Printer</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-navy uppercase tracking-tight">Paper Width</label>
-              <div className="flex gap-3">
-                {['58mm', '80mm'].map(w => (
-                  <Button key={w} variant={storeInfo.printerWidth === w ? 'accent' : 'outline'} className="flex-1" onClick={() => setStoreInfo({ ...storeInfo, printerWidth: w })}>{w}</Button>
-                ))}
-              </div>
-            </div>
-            <p className="text-xs text-brown/40">Select your thermal printer paper width. 80mm (3 inch) is standard for most POS printers.</p>
           </CardContent>
         </Card>
 

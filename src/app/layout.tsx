@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   }
 };
 
+import DialogProvider from "@/components/ui/DialogProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +32,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${arima.variable} antialiased font-sans`}>
-        {children}
+        <DialogProvider>
+          {children}
+        </DialogProvider>
       </body>
     </html>
   );
