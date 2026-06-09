@@ -40,9 +40,9 @@ export default function SettingsPage() {
   };
 
   const handleClearData = () => {
-    if (confirm('⚠️ This will delete ALL data (products, customers, sales). Are you sure?')) {
-      ['mrfancy_products', 'mrfancy_customers', 'mrfancy_sales', 'mrfancy_vendors'].forEach(k => localStorage.removeItem(k));
-      alert('Data cleared. Refresh the page to re-seed default data.');
+    if (confirm('⚠️ This will delete customers, sales, and vendors. Product inventory will be preserved. Are you sure?')) {
+      ['mrfancy_customers', 'mrfancy_sales', 'mrfancy_vendors'].forEach(k => localStorage.removeItem(k));
+      alert('Data cleared successfully.');
       window.location.reload();
     }
   };
